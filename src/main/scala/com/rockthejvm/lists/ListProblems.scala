@@ -9,6 +9,7 @@ sealed abstract class RList[+T] {
   def ::[S >: T](elem: S): RList[S] = new ::(elem, this)
   def apply(index: Int): T
   def length: Int
+  def reverse: RList[T]
 }
 
 case object RNil extends RList[Nothing] {
@@ -18,6 +19,8 @@ case object RNil extends RList[Nothing] {
   override def toString: String = "[]"
   override def apply(index: Int): Nothing = throw new NoSuchElementException()
   override def length: Int = 0
+
+  override def reverse: RList[Nothing] = RNil
 }
 
 case class ::[+T](override val head: T, override val tail: RList[T]) extends RList[T] {
@@ -74,6 +77,16 @@ case class ::[+T](override val head: T, override val tail: RList[T]) extends RLi
 
     countItems(0, this)
   }
+
+  override def reverse: RList[T] = {
+    @tailrec
+    def reverse(remainingList: RList[T], reversedList: RList[T]): RList[T] = {
+      if (remainingList.isEmpty) reversedList
+      else reverse(remainingList.tail, remainingList.head :: reversedList)
+    }
+
+    reverse(this, RNil)
+  }
 }
 
 object ListProblems extends App {
@@ -91,4 +104,6 @@ object ListProblems extends App {
 
   println(s"The our list contains ${aSmallList.length} elements")
   println(s"An empty list contains ${RNil.length} elements")
+
+  println(aSmallList.reverse)
 }

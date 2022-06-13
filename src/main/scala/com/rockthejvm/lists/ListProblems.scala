@@ -79,6 +79,18 @@ case class ::[+T](override val head: T, override val tail: RList[T]) extends RLi
   }
 
   override def reverse: RList[T] = {
+    /*
+    Desktop test:
+
+    [1,2,3,4].reverse = reverse.([1,2,3,4], RNil)
+    = reverse([2, 3, 4], [1])
+    = reverse([3, 4], [2, 1])
+    = reverse([4], [3, 2, 1])
+    = reverse([], [4, 3, 2, 1])
+    = [4, 3, 2, 1]
+
+    Algorithm complexity = O(N), since we need to traverse all the elements.
+     */
     @tailrec
     def reverse(remainingList: RList[T], reversedList: RList[T]): RList[T] = {
       if (remainingList.isEmpty) reversedList

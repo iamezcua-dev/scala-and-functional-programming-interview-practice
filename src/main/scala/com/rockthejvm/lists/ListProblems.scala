@@ -8,6 +8,7 @@ sealed abstract class RList[+T] {
   def isEmpty: Boolean
   def ::[S >: T](elem: S): RList[S] = new ::(elem, this)
   def apply(index: Int): T
+  def length: Int
 }
 
 case object RNil extends RList[Nothing] {
@@ -16,6 +17,7 @@ case object RNil extends RList[Nothing] {
   override def isEmpty: Boolean = true
   override def toString: String = "[]"
   override def apply(index: Int): Nothing = throw new NoSuchElementException()
+  override def length: Int = 0
 }
 
 case class ::[+T](override val head: T, override val tail: RList[T]) extends RList[T] {
@@ -55,6 +57,20 @@ case class ::[+T](override val head: T, override val tail: RList[T]) extends RLi
     applyTailrec(this, 0)
   }
 
+  override def length: Int = {
+    /*
+    * List can be:
+    *   - Of size greater than zero (e.g. 1, 4, 99, 20000, etc.)
+    *   - Of size zero (empty list)
+    */
+    @tailrec
+    def countItems(itemCount: Int, remainingList: RList[T]): Int = {
+      if( remainingList.isEmpty) itemCount
+      else countItems(itemCount+1, remainingList.tail)
+    }
+
+    countItems(0, this)
+  }
 }
 
 object ListProblems extends App {
@@ -67,5 +83,9 @@ object ListProblems extends App {
   println(aSmallList(1))
   println(aSmallList(2))
   println(aSmallList(3))
-  println(aSmallList(90))
+  val expression: Int = try { aSmallList(90) } catch { case n: NoSuchElementException => -1}
+  println(expression)
+
+  println(s"The our list contains ${aSmallList.length} elements")
+  println(s"An empty list contains ${RNil.length} elements")
 }

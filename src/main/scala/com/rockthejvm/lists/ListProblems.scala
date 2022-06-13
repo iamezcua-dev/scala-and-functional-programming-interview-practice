@@ -33,14 +33,26 @@ case class ::[+T](override val head: T, override val tail: RList[T]) extends RLi
   }
 
   override def apply(index: Int): T = {
+    /*
+    ## Desktop test:
+      [1,2,3,4].apply(90) = retrieveIndex(0, [1,2,3,4])
+      = retrieveIndex(1, [2,3,4])
+      = retrieveIndex(2, [3,4])
+      = retrieveIndex(3, [4])
+      ===> The following `RNil.tail` will produce a NoSuchElementException and will stop the recursion:
+      = retrieveIndex(4, [].tail)
+
+     ## Algorithm complexity
+     O(min(N, index)
+     */
     @tailrec
-    def retrieveIndex(currentIndex: Int, remainingList: RList[T]): T = {
-      if (currentIndex >= index) remainingList.head
-      else if (!tail.isEmpty) retrieveIndex(currentIndex + 1, remainingList.tail)
-      else throw new NoSuchElementException
+    def applyTailrec(remainingList: RList[T], currentIndex: Int): T = {
+      if(currentIndex == index) remainingList.head
+      else applyTailrec(remainingList.tail, currentIndex + 1)
     }
 
-    retrieveIndex(0, this)
+    if (index < 0) throw new NoSuchElementException
+    applyTailrec(this, 0)
   }
 
 }
@@ -55,5 +67,5 @@ object ListProblems extends App {
   println(aSmallList(1))
   println(aSmallList(2))
   println(aSmallList(3))
-  println(aSmallList(4))
+  println(aSmallList(90))
 }

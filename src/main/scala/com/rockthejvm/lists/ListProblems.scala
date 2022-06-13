@@ -62,6 +62,9 @@ case class ::[+T](override val head: T, override val tail: RList[T]) extends RLi
     * List can be:
     *   - Of size greater than zero (e.g. 1, 4, 99, 20000, etc.)
     *   - Of size zero (empty list)
+    *
+    * Algorithm complexity:
+    *   - O(n), since we don't know the list size in advance and we would need to traverse it entirely.
     */
     @tailrec
     def countItems(itemCount: Int, remainingList: RList[T]): Int = {

@@ -101,11 +101,25 @@ case class ::[+T](override val head: T, override val tail: RList[T]) extends RLi
   }
 }
 
+object RList {
+  def from[T](it: Iterable[T]): RList[T] = {
+    @tailrec
+    def convertToList(remaining: Iterable[T], accumulator: RList[T]): RList[T] = {
+      if(remaining.isEmpty) accumulator
+      else convertToList(remaining.tail, remaining.head :: accumulator)
+    }
+
+    convertToList(it, RNil).reverse
+  }
+}
+
 object ListProblems extends App {
   //  val aSmallList = Cons(1, Cons(2, Cons(3, RNil)))
   //  val aSmallList = ::(1, ::(2, ::(3, RNil)))
   val aSmallList = 1 :: 2 :: 3 :: 4 :: RNil
+  val aLargeList = RList.from(1 to 10000)
   println(aSmallList)
+  println(aLargeList)
 
   println(aSmallList(0))
   println(aSmallList(1))
@@ -113,9 +127,12 @@ object ListProblems extends App {
   println(aSmallList(3))
   val expression: Int = try { aSmallList(90) } catch { case n: NoSuchElementException => -1}
   println(expression)
+  println(aLargeList(8735))
 
   println(s"The our list contains ${aSmallList.length} elements")
   println(s"An empty list contains ${RNil.length} elements")
+  println(s"Our large list contains ${aLargeList.length} elements.")
 
   println(aSmallList.reverse)
+  println(aLargeList.reverse)
 }

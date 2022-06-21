@@ -109,7 +109,17 @@ case class ::[+T](override val head: T, override val tail: RList[T]) extends RLi
     reverse(this, RNil)
   }
 
-  // append another list
+  /**
+   * Appends another list to the caller's list in order.
+   *
+   * - Algorithm complexity: O(2M)
+   * - Rationale: Assuming that M is the caller's list and N is the list to concatenate, then N would need a previous
+   *    reverse operation, for after prepending each and every of its elements to M.
+   *
+   * @param anotherList The list to concatenate.
+   * @tparam S The type of the elements on the list.
+   * @return A list containing the elements of the caller's list plus the elements in the <code>anotherList</code>.
+   */
   override def ++[S >: T](anotherList: RList[S]): RList[S] = {
     @tailrec
     def concatenateHelper(accumulator: RList[S], remainingElements: RList[S]): RList[S] = {

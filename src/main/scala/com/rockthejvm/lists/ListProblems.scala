@@ -17,8 +17,12 @@ sealed abstract class RList[+T] {
   def apply(index: Int): T
   def length: Int
   def reverse: RList[T]
+
   // concatenate another list to this one
   def ++[S >: T](anotherList: RList[S]): RList[S]
+
+  // remove an element at a given index, return a NEW list
+  def removeAt(index: Int): RList[T]
 }
 
 case object RNil extends RList[Nothing] {
@@ -30,6 +34,7 @@ case object RNil extends RList[Nothing] {
   override def length: Int = 0
   override def reverse: RList[Nothing] = RNil
   override def ++[S >: Nothing](anotherList: RList[S]): RList[S] = anotherList
+  override def removeAt(index: Int): RList[Nothing] = RNil
 }
 
 case class ::[+T](override val head: T, override val tail: RList[T]) extends RList[T] {
@@ -129,6 +134,32 @@ case class ::[+T](override val head: T, override val tail: RList[T]) extends RLi
 
     concatenateHelper(anotherList, this.reverse)
   }
+
+
+  /**
+   * Remove the element at the provided index.
+   *
+   * - Algorithm Complexity:
+   *    - O(1), for the best case
+   *    - O(n + m) for the worst case
+   * - Rationale:
+   *    - If the element you want to remove is the first element, you just drop it and return the tail of the list.
+   *    - Else, we would need to traverse the list of size N and when the element is dropped, we would need to append
+   *      the remainingList to a reversed version of the accumulatorList of size M.
+   *
+   * @param index The index of the element to remove from the list.
+   * @return
+   */
+  override def removeAt(index: Int): RList[T] = {
+    @tailrec
+    def removeAtHelper(remainingList: RList[T], accumulatorList: RList[T] = RNil, currentIndex: Int = 0): RList[T] = {
+      if(currentIndex == index) accumulatorList.reverse ++ remainingList.tail
+      else removeAtHelper(remainingList.tail, remainingList.head :: accumulatorList  , currentIndex + 1)
+    }
+
+    if(index >= this.length) throw new IndexOutOfBoundsException
+    else removeAtHelper(this)
+  }
 }
 
 object RList {
@@ -169,5 +200,10 @@ object ListProblems extends App {
   val anotherSmallList = 5 :: 6 :: 7 :: 8 :: 9 :: RNil
   println(s"Another small list: $anotherSmallList")
 
-  println(s"Small list ++ another small list: ${aSmallList ++ anotherSmallList}")
+  val myList: RList[Int] = aSmallList ++ anotherSmallList
+  println(s"Small list ++ another small list (myList): ${myList}")
+
+  println(s"Dropping the 1st element from myList: ${myList.removeAt(0)}")
+  println(s"Dropping the 1st and 3rd element from myList: ${myList.removeAt(0).removeAt(2)}")
+  println(s"Dropping the 5th element from myList: ${myList.removeAt(4)}")
 }

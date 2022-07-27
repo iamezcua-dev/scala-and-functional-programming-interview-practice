@@ -23,7 +23,26 @@ sealed abstract class RList[+T] {
 
   // remove an element at a given index, return a NEW list
   def removeAt(index: Int): RList[T]
+
+  // the big three
+  def map[S](f: T => S): RList[S]
+  def flatMap[S](f: T => RList[S]): RList[S]
+  def filter(f: T => Boolean): RList[T]
 }
+
+
+object RList {
+  def from[T](it: Iterable[T]): RList[T] = {
+    @tailrec
+    def convertToList(remaining: Iterable[T], accumulator: RList[T]): RList[T] = {
+      if(remaining.isEmpty) accumulator
+      else convertToList(remaining.tail, remaining.head :: accumulator)
+    }
+
+    convertToList(it, RNil).reverse
+  }
+}
+
 
 case object RNil extends RList[Nothing] {
   override def head: Nothing = throw new NoSuchElementException()
@@ -35,6 +54,9 @@ case object RNil extends RList[Nothing] {
   override def reverse: RList[Nothing] = RNil
   override def ++[S >: Nothing](anotherList: RList[S]): RList[S] = anotherList
   override def removeAt(index: Int): RList[Nothing] = RNil
+  override def map[S](f: Nothing => S): RList[S] = RNil
+  override def flatMap[S](f: Nothing => RList[S]): RList[S] = RNil
+  override def filter(f: Nothing => Boolean): RList[Nothing] = RNil
 }
 
 case class ::[+T](override val head: T, override val tail: RList[T]) extends RList[T] {
@@ -160,19 +182,81 @@ case class ::[+T](override val head: T, override val tail: RList[T]) extends RLi
     if(index >= this.length) throw new IndexOutOfBoundsException
     else removeAtHelper(this)
   }
-}
 
-object RList {
-  def from[T](it: Iterable[T]): RList[T] = {
+  /**
+   *
+   * @param f
+   * @tparam S
+   * @return
+   */
+  override def map[S](f: T => S): RList[S] = {
+    /*
+      t = (x: x + 1)
+      [1,2,3].map(transformer) = mapHelper([2,3], [t(1)])
+      = mapHelper([3], [t(2), t(1)])
+      = mapHelper([], [t(3), t(2), t(1)])
+      [t(3), t(2), t(1)].reverse
+     */
     @tailrec
-    def convertToList(remaining: Iterable[T], accumulator: RList[T]): RList[T] = {
-      if(remaining.isEmpty) accumulator
-      else convertToList(remaining.tail, remaining.head :: accumulator)
+    def mapHelper(remainingElements: RList[T], mappedElements: RList[S]): RList[S] = {
+      if (remainingElements.length <= 0) mappedElements
+      else {
+        val transformedValue: S = f(remainingElements.head)
+        mapHelper(remainingElements.tail, transformedValue :: mappedElements)
+      }
     }
 
-    convertToList(it, RNil).reverse
+    mapHelper(this, RNil).reverse
   }
+
+  /**
+   *
+   * @param f
+   * @tparam S
+   * @return
+   */
+  override def flatMap[S](f: T => RList[S]): RList[S] = {
+    /*
+      val t = (i: T) => i :: (i*3) :: RNil
+
+      [1,2,3,4].flatMap(t) = flatMapHelper([1,2,3,4], [])
+      = flatMapHelper([2,3,4], [[1, 3].reverse])
+      = flatMapHelper([3,4], [[2, 6].reverse], [3, 1])
+      = flatMapHelper([4], [[3, 9].reverse, [6, 2], [3, 1]])
+      = flatMapHelper([], [[4, 12].reverse, [9, 3], [6, 2], [3, 1]])
+      = [[12, 4], [9, 3], [6, 2], [3, 1]].flatten = [12, 4, 9, 3, 6, 2, 3, 1].reverse
+      = [1, 3, 2, 6, 3, 9, 4, 12]
+     */
+    //    def flatten: RList[T] = {
+    //      @tailrec
+    //      def flattenHelper(remainingElements: RList[RList[T]], flattenedList: RList[T]): RList[T] = {
+    //        if(remainingElements.length <= 0 ) flattenedList
+    //        else {
+    //          val head: RList[T] = remainingElements.head
+    //          flattenHelper(remainingElements.tail, head ++ flattenedList)
+    //        }
+    //      }
+    //
+    //      flattenHelper(this, RNil).reverse
+    //    }
+    //
+    //    val mappedList = this.map(f)
+    //    val flattenedList = flatten(mappedList)
+    ???
+  }
+
+  /**
+   *
+   * @param f
+   * @return
+   */
+  override def filter(f: T => Boolean): RList[T] = {
+    ???
+  }
+
 }
+
+
 
 object ListProblems extends App {
   //  val aSmallList = Cons(1, Cons(2, Cons(3, RNil)))
@@ -206,4 +290,29 @@ object ListProblems extends App {
   println(s"Dropping the 1st element from myList: ${myList.removeAt(0)}")
   println(s"Dropping the 1st and 3rd element from myList: ${myList.removeAt(0).removeAt(2)}")
   println(s"Dropping the 5th element from myList: ${myList.removeAt(4)}")
+
+  /*
+    map
+   */
+  val transformer = (i: Int) => i * 2
+  println(s"Duplicating every number in the list: ${myList.map(transformer)}")
+
+  /*
+    flatten
+   */
+  val myList2 = (1 :: 3 :: RNil) :: (2 :: 6 :: RNil) :: (3 :: 9 :: RNil) :: (4 :: 12 :: RNil) :: RNil
+  println(s"Original list ${myList2}")
+  println(s"The flattened version of the list ${myList2.flatten}")
+
+  /*
+    flatMap
+   */
+  val numberAndItsTriple = (i: Int) => i :: (i*3) :: RNil
+  println(s"The even numbers in the list are: ${myList.flatMap(numberAndItsTriple)}")
+
+  /*
+    filter
+   */
+  val evenNumbers = (i: Int) => i % 2 == 0
+  println(s"The even numbers in the list are: ${myList.filter(evenNumbers)}")
 }

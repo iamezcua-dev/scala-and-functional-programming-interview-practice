@@ -30,7 +30,6 @@ sealed abstract class RList[+T] {
   def filter(f: T => Boolean): RList[T]
 }
 
-
 object RList {
   def from[T](it: Iterable[T]): RList[T] = {
     @tailrec
@@ -42,7 +41,6 @@ object RList {
     convertToList(it, RNil).reverse
   }
 }
-
 
 case object RNil extends RList[Nothing] {
   override def head: Nothing = throw new NoSuchElementException()
@@ -217,32 +215,24 @@ case class ::[+T](override val head: T, override val tail: RList[T]) extends RLi
    */
   override def flatMap[S](f: T => RList[S]): RList[S] = {
     /*
-      val t = (i: T) => i :: (i*3) :: RNil
+      val f = (i: T) => i :: (i*3) :: RNil
 
-      [1,2,3,4].flatMap(t) = flatMapHelper([1,2,3,4], [])
-      = flatMapHelper([2,3,4], [[1, 3].reverse])
-      = flatMapHelper([3,4], [[2, 6].reverse], [3, 1])
-      = flatMapHelper([4], [[3, 9].reverse, [6, 2], [3, 1]])
-      = flatMapHelper([], [[4, 12].reverse, [9, 3], [6, 2], [3, 1]])
-      = [[12, 4], [9, 3], [6, 2], [3, 1]].flatten = [12, 4, 9, 3, 6, 2, 3, 1].reverse
+      [1,2,3,4].flatMap(t) = flatMap([1,2,3,4], [])
+      = flatMap([2,3,4], [] ++ f(1)) = flatMap([2,3,4], [] ++ [1,3] = flatMap([2,3,4], [1,3]])
+      = flatMap([3,4], [1, 3] ++ f(2)) = flatMap([3,4], [1,3] ++ [2,6]) = flatMap([3,4], [1,3,2,6])
+      = flatMap([4], [1,3,2,6] ++ f(3)) = flatMap([4], [1,3,2,6] ++ [3, 9]) = flatMap([4], [1,3,2,6,3,9])
+      = flatMap([], [1,3,2,6,3,9] ++ f(4)) = flatMap([], [1,3,2,6,3,9] ++ [4, 12]) = flatMap([], [1,3,2,6,3,9,4,12])
       = [1, 3, 2, 6, 3, 9, 4, 12]
+
+      * Algorithm Complexity: O(N^2)
      */
-    //    def flatten: RList[T] = {
-    //      @tailrec
-    //      def flattenHelper(remainingElements: RList[RList[T]], flattenedList: RList[T]): RList[T] = {
-    //        if(remainingElements.length <= 0 ) flattenedList
-    //        else {
-    //          val head: RList[T] = remainingElements.head
-    //          flattenHelper(remainingElements.tail, head ++ flattenedList)
-    //        }
-    //      }
-    //
-    //      flattenHelper(this, RNil).reverse
-    //    }
-    //
-    //    val mappedList = this.map(f)
-    //    val flattenedList = flatten(mappedList)
-    ???
+    @tailrec
+    def flatMapHelper(remaining: RList[T], flatMapped: RList[S]): RList[S] = {
+      if(remaining.length <= 0 ) flatMapped
+      else flatMapHelper(remaining.tail, flatMapped ++ f(remaining.head))
+    }
+
+    flatMapHelper(this, RNil)
   }
 
   /**
@@ -251,12 +241,17 @@ case class ::[+T](override val head: T, override val tail: RList[T]) extends RLi
    * @return
    */
   override def filter(f: T => Boolean): RList[T] = {
-    ???
+    @tailrec
+    def filterHelper(remaining: RList[T], filteredElements: RList[T]): RList[T] = {
+      if (remaining.isEmpty) filteredElements
+      else if(f(remaining.head)) filterHelper(remaining.tail, remaining.head :: filteredElements)
+      else filterHelper(remaining.tail, filteredElements)
+    }
+
+    filterHelper(this, RNil).reverse
   }
 
 }
-
-
 
 object ListProblems extends App {
   //  val aSmallList = Cons(1, Cons(2, Cons(3, RNil)))
@@ -285,7 +280,7 @@ object ListProblems extends App {
   println(s"Another small list: $anotherSmallList")
 
   val myList: RList[Int] = aSmallList ++ anotherSmallList
-  println(s"Small list ++ another small list (myList): ${myList}")
+  println(s"Small list ++ another small list (myList): $myList")
 
   println(s"Dropping the 1st element from myList: ${myList.removeAt(0)}")
   println(s"Dropping the 1st and 3rd element from myList: ${myList.removeAt(0).removeAt(2)}")
@@ -298,21 +293,14 @@ object ListProblems extends App {
   println(s"Duplicating every number in the list: ${myList.map(transformer)}")
 
   /*
-    flatten
-   */
-  val myList2 = (1 :: 3 :: RNil) :: (2 :: 6 :: RNil) :: (3 :: 9 :: RNil) :: (4 :: 12 :: RNil) :: RNil
-  println(s"Original list ${myList2}")
-  println(s"The flattened version of the list ${myList2.flatten}")
-
-  /*
     flatMap
    */
-  val numberAndItsTriple = (i: Int) => i :: (i*3) :: RNil
-  println(s"The even numbers in the list are: ${myList.flatMap(numberAndItsTriple)}")
+  val numberAndItsTriple = (i: Int) => RList.from(List(i, i*3))
+  println(s"A list containing the number + its triple: ${myList.flatMap(numberAndItsTriple)}")
 
   /*
     filter
    */
   val evenNumbers = (i: Int) => i % 2 == 0
-  println(s"The even numbers in the list are: ${myList.filter(evenNumbers)}")
+  println(s"Keeping only even numbers: ${myList.filter(evenNumbers)}")
 }

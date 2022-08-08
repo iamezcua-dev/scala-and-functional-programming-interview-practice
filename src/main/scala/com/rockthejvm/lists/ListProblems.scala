@@ -280,7 +280,7 @@ object ListProblems extends App {
   println(s"Another small list: $anotherSmallList")
 
   val myList: RList[Int] = aSmallList ++ anotherSmallList
-  println(s"Small list ++ another small list (myList): $myList")
+  println(s"Creating myList using small list ++ another small list: $myList")
 
   println(s"Dropping the 1st element from myList: ${myList.removeAt(0)}")
   println(s"Dropping the 1st and 3rd element from myList: ${myList.removeAt(0).removeAt(2)}")

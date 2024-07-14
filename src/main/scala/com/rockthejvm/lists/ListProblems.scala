@@ -290,17 +290,17 @@ object ListProblems extends App {
     map
    */
   val transformer = (i: Int) => i * 2
-  println(s"Duplicating every number in the list: ${myList.map(transformer)}")
+  println(s"Map - Duplicating every number in the list: ${myList.map(transformer)}")
 
   /*
     flatMap
    */
   val numberAndItsTriple = (i: Int) => RList.from(List(i, i*3))
-  println(s"A list containing the number + its triple: ${myList.flatMap(numberAndItsTriple)}")
+  println(s"FlatMap - A list containing the number + its triple: ${myList.flatMap(numberAndItsTriple)}")
 
   /*
     filter
    */
   val evenNumbers = (i: Int) => i % 2 == 0
-  println(s"Keeping only even numbers: ${myList.filter(evenNumbers)}")
+  println(s"Filter - Keeping only even numbers: ${myList.filter(evenNumbers)}")
 }

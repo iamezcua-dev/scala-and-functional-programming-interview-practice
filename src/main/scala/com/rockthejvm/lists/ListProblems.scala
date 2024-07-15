@@ -182,10 +182,12 @@ case class ::[+T](override val head: T, override val tail: RList[T]) extends RLi
   }
 
   /**
+   * Applies the given function to each element of the RList and returns a new RList
+   * containing the transformed elements.
    *
-   * @param f
-   * @tparam S
-   * @return
+   * @param f the function to apply to each element
+   * @tparam S the type of the elements in the new RList
+   * @return a new RList with transformed elements
    */
   override def map[S](f: T => S): RList[S] = {
     /*
@@ -209,9 +211,13 @@ case class ::[+T](override val head: T, override val tail: RList[T]) extends RLi
 
   /**
    *
-   * @param f
-   * @tparam S
-   * @return
+   * Applies the given function f to each element of the RList, and
+   * returns a new RList resulting from the concatenation of the
+   * elements obtained from applying f.
+   *
+   * @param f the function to apply to each element of the RList
+   * @tparam S the type of the elements of the resulting RList
+   * @return a new RList containing the concatenated elements obtained from applying f
    */
   override def flatMap[S](f: T => RList[S]): RList[S] = {
     /*
@@ -236,9 +242,10 @@ case class ::[+T](override val head: T, override val tail: RList[T]) extends RLi
   }
 
   /**
+   * Filters elements of the list based on the given predicate function.
    *
-   * @param f
-   * @return
+   * @param f the predicate function used to filter elements
+   * @return a new RList containing only the elements that satisfy the predicate
    */
   override def filter(f: T => Boolean): RList[T] = {
     @tailrec

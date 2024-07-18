@@ -6,9 +6,10 @@ sealed abstract class RList[+T] {
   def head: T
   def tail: RList[T]
   def isEmpty: Boolean
-
+  
   /**
    * Appends the <code>elem</code> at the beginning of the list.
+   *
    * @param elem The element to prepend to the list from the caller.
    * @tparam S The type of the elements the list will contain.
    * @return A list containing <code>elem</code> prepended to the caller's list.
@@ -17,13 +18,13 @@ sealed abstract class RList[+T] {
   def apply(index: Int): T
   def length: Int
   def reverse: RList[T]
-
+  
   // concatenate another list to this one
   def ++[S >: T](anotherList: RList[S]): RList[S]
-
+  
   // remove an element at a given index, return a NEW list
   def removeAt(index: Int): RList[T]
-
+  
   // the big three
   def map[S](f: T => S): RList[S]
   def flatMap[S](f: T => RList[S]): RList[S]
@@ -34,10 +35,10 @@ object RList {
   def from[T](it: Iterable[T]): RList[T] = {
     @tailrec
     def convertToList(remaining: Iterable[T], accumulator: RList[T]): RList[T] = {
-      if(remaining.isEmpty) accumulator
+      if (remaining.isEmpty) accumulator
       else convertToList(remaining.tail, remaining.head :: accumulator)
     }
-
+    
     convertToList(it, RNil).reverse
   }
 }
@@ -59,7 +60,7 @@ case object RNil extends RList[Nothing] {
 
 case class ::[+T](override val head: T, override val tail: RList[T]) extends RList[T] {
   override def isEmpty: Boolean = false
-
+  
   override def toString: String = {
     @tailrec
     def toStringTailrec(remaining: RList[T], result: String): String = {
@@ -67,10 +68,10 @@ case class ::[+T](override val head: T, override val tail: RList[T]) extends RLi
       else if (remaining.tail.isEmpty) s"$result${remaining.head}"
       else toStringTailrec(remaining.tail, s"$result${remaining.head}, ")
     }
-
+    
     "[" + toStringTailrec(this, "") + "]"
   }
-
+  
   override def apply(index: Int): T = {
     /*
     ## Desktop test:
@@ -86,14 +87,14 @@ case class ::[+T](override val head: T, override val tail: RList[T]) extends RLi
      */
     @tailrec
     def applyTailrec(remainingList: RList[T], currentIndex: Int): T = {
-      if(currentIndex == index) remainingList.head
+      if (currentIndex == index) remainingList.head
       else applyTailrec(remainingList.tail, currentIndex + 1)
     }
-
+    
     if (index < 0) throw new NoSuchElementException
     applyTailrec(this, 0)
   }
-
+  
   override def length: Int = {
     /*
     * List can be:
@@ -105,13 +106,13 @@ case class ::[+T](override val head: T, override val tail: RList[T]) extends RLi
     */
     @tailrec
     def countItems(itemCount: Int, remainingList: RList[T]): Int = {
-      if( remainingList.isEmpty) itemCount
-      else countItems(itemCount+1, remainingList.tail)
+      if (remainingList.isEmpty) itemCount
+      else countItems(itemCount + 1, remainingList.tail)
     }
-
+    
     countItems(0, this)
   }
-
+  
   override def reverse: RList[T] = {
     /*
     Desktop test:
@@ -130,10 +131,10 @@ case class ::[+T](override val head: T, override val tail: RList[T]) extends RLi
       if (remainingList.isEmpty) reversedList
       else reverse(remainingList.tail, remainingList.head :: reversedList)
     }
-
+    
     reverse(this, RNil)
   }
-
+  
   /**
    * Appends another list to the caller's list in order.
    *
@@ -148,21 +149,21 @@ case class ::[+T](override val head: T, override val tail: RList[T]) extends RLi
   override def ++[S >: T](anotherList: RList[S]): RList[S] = {
     @tailrec
     def concatenateHelper(accumulator: RList[S], remainingElements: RList[S]): RList[S] = {
-      if(remainingElements.isEmpty) accumulator
-      else concatenateHelper( remainingElements.head :: accumulator, remainingElements.tail)
+      if (remainingElements.isEmpty) accumulator
+      else concatenateHelper(remainingElements.head :: accumulator, remainingElements.tail)
     }
-
+    
     concatenateHelper(anotherList, this.reverse)
   }
-
-
+  
+  
   /**
    * Remove the element at the provided index.
    *
    * - Algorithm Complexity:
    *    - O(1), for the best case
    *    - O(n + m) for the worst case
-   * - Rationale:
+   *      - Rationale:
    *    - If the element you want to remove is the first element, you just drop it and return the tail of the list.
    *    - Else, we would need to traverse the list of size N and when the element is dropped, we would need to append
    *      the remainingList to a reversed version of the accumulatorList of size M.
@@ -173,14 +174,14 @@ case class ::[+T](override val head: T, override val tail: RList[T]) extends RLi
   override def removeAt(index: Int): RList[T] = {
     @tailrec
     def removeAtHelper(remainingList: RList[T], accumulatorList: RList[T] = RNil, currentIndex: Int = 0): RList[T] = {
-      if(currentIndex == index) accumulatorList.reverse ++ remainingList.tail
-      else removeAtHelper(remainingList.tail, remainingList.head :: accumulatorList  , currentIndex + 1)
+      if (currentIndex == index) accumulatorList.reverse ++ remainingList.tail
+      else removeAtHelper(remainingList.tail, remainingList.head :: accumulatorList, currentIndex + 1)
     }
-
-    if(index >= this.length) throw new IndexOutOfBoundsException
+    
+    if (index >= this.length) throw new IndexOutOfBoundsException
     else removeAtHelper(this)
   }
-
+  
   /**
    * Applies the given function to each element of the RList and returns a new RList
    * containing the transformed elements.
@@ -205,10 +206,10 @@ case class ::[+T](override val head: T, override val tail: RList[T]) extends RLi
         mapHelper(remainingElements.tail, transformedValue :: mappedElements)
       }
     }
-
+    
     mapHelper(this, RNil).reverse
   }
-
+  
   /**
    *
    * Applies the given function f to each element of the RList, and
@@ -234,13 +235,13 @@ case class ::[+T](override val head: T, override val tail: RList[T]) extends RLi
      */
     @tailrec
     def flatMapHelper(remaining: RList[T], flatMapped: RList[S]): RList[S] = {
-      if(remaining.length <= 0 ) flatMapped
+      if (remaining.length <= 0) flatMapped
       else flatMapHelper(remaining.tail, flatMapped ++ f(remaining.head))
     }
-
+    
     flatMapHelper(this, RNil)
   }
-
+  
   /**
    * Filters elements of the list based on the given predicate function.
    *
@@ -251,13 +252,12 @@ case class ::[+T](override val head: T, override val tail: RList[T]) extends RLi
     @tailrec
     def filterHelper(remaining: RList[T], filteredElements: RList[T]): RList[T] = {
       if (remaining.isEmpty) filteredElements
-      else if(f(remaining.head)) filterHelper(remaining.tail, remaining.head :: filteredElements)
+      else if (f(remaining.head)) filterHelper(remaining.tail, remaining.head :: filteredElements)
       else filterHelper(remaining.tail, filteredElements)
     }
-
+    
     filterHelper(this, RNil).reverse
   }
-
 }
 
 object ListProblems extends App {
@@ -267,7 +267,7 @@ object ListProblems extends App {
   val aLargeList = RList.from(1 to 10000)
   println(aSmallList)
   println(aLargeList)
-
+  
   println(aSmallList(0))
   println(aSmallList(1))
   println(aSmallList(2))
@@ -275,36 +275,36 @@ object ListProblems extends App {
   val expression: Int = try { aSmallList(90) } catch { case n: NoSuchElementException => -1}
   println(expression)
   println(aLargeList(8735))
-
+  
   println(s"The our list contains ${aSmallList.length} elements")
   println(s"An empty list contains ${RNil.length} elements")
   println(s"Our large list contains ${aLargeList.length} elements.")
-
+  
   println(aSmallList.reverse)
   println(aLargeList.reverse)
-
+  
   val anotherSmallList = 5 :: 6 :: 7 :: 8 :: 9 :: RNil
   println(s"Another small list: $anotherSmallList")
-
+  
   val myList: RList[Int] = aSmallList ++ anotherSmallList
   println(s"Creating myList using small list ++ another small list: $myList")
-
+  
   println(s"Dropping the 1st element from myList: ${myList.removeAt(0)}")
   println(s"Dropping the 1st and 3rd element from myList: ${myList.removeAt(0).removeAt(2)}")
   println(s"Dropping the 5th element from myList: ${myList.removeAt(4)}")
-
+  
   /*
     map
    */
   val transformer = (i: Int) => i * 2
   println(s"Map - Duplicating every number in the list: ${myList.map(transformer)}")
-
+  
   /*
     flatMap
    */
-  val numberAndItsTriple = (i: Int) => RList.from(List(i, i*3))
+  val numberAndItsTriple = (i: Int) => RList.from(List(i, i * 3))
   println(s"FlatMap - A list containing the number + its triple: ${myList.flatMap(numberAndItsTriple)}")
-
+  
   /*
     filter
    */

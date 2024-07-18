@@ -14,7 +14,7 @@ sealed abstract class RList[+T] {
    * @tparam S The type of the elements the list will contain.
    * @return A list containing <code>elem</code> prepended to the caller's list.
    */
-  def ::[S >: T](elem: S): RList[S] = new ::(elem, this)
+  def ::[S >: T](elem: S): RList[S] = new::(elem, this)
   def apply(index: Int): T
   def length: Int
   def reverse: RList[T]
@@ -140,7 +140,7 @@ case class ::[+T](override val head: T, override val tail: RList[T]) extends RLi
    *
    * - Algorithm complexity: O(2M)
    * - Rationale: Assuming that M is the caller's list and N is the list to concatenate, then N would need a previous
-   *    reverse operation, for after prepending each and every of its elements to M.
+   * reverse operation, for after prepending each and every of its elements to M.
    *
    * @param anotherList The list to concatenate.
    * @tparam S The type of the elements on the list.
@@ -272,7 +272,11 @@ object ListProblems extends App {
   println(aSmallList(1))
   println(aSmallList(2))
   println(aSmallList(3))
-  val expression: Int = try { aSmallList(90) } catch { case n: NoSuchElementException => -1}
+  val expression: Int = try {
+    aSmallList(90)
+  } catch {
+    case n: NoSuchElementException => -1
+  }
   println(expression)
   println(aLargeList(8735))
   
